@@ -7,7 +7,7 @@ sass-compiler is an extension for the code editor CodeTasty that adds automatic 
 
 SASS compile options can be set in the first line of the edited file:
 
-    // out: ../css/style.css, compress: true
+    // out: ../css/style.css, main: ../master.scss
 
 out: compiled file destination
 
@@ -16,4 +16,8 @@ out: compiled file destination
 
 main: adds a master file before compiled file
 
-    // main: main.less, ../master.less
+    // main: main.scss, ../master.scss
+
+importing files
+
+    @import "variables";

@@ -5,6 +5,7 @@ define(function(require, exports, module) {
 	var Socket = require('code/socket');
 	var Workspace = require('code/workspace');
 	var Notification = require('code/notification');
+	var Fn = require('code/fn');
 	
 	var Sass = new require('./sass');
 	
@@ -17,6 +18,26 @@ define(function(require, exports, module) {
 		
 	}, {
 		init: function() {
+			SassWorker.importer(function(request, done) {
+				var ext = Fn.pathinfo(Extension.importPath).extension;
+				var reqExt = Fn.pathinfo(request.current).extension;
+				
+				var toLoad = request.current;
+				
+				if (!reqExt) {
+					toLoad += '.' + ext;
+				}
+				
+				toLoad = Extension.parsePath(Extension.importPath, toLoad);
+				
+				Extension.getCache(Extension.importWorkspace, toLoad, function(data) {
+					done({
+						path: toLoad,
+						content: data
+					});
+				});
+			});
+			
 			EditorSession.on('save', function(data) {
 				// var sess = EditorSession.sessions[data.id];
 				
@@ -27,6 +48,8 @@ define(function(require, exports, module) {
 			
 			this.checkCache();
 		},
+		importWorkspace: null,
+		importPath: '',
 		cache: [],
 		getCache: function(workspaceId, path, c) {
 			var found = false;
@@ -146,7 +169,7 @@ define(function(require, exports, module) {
 			});
 			
 			destination = destination.join('/').replace(/([\/]+)/gi, '/');
-			console.log(destination);
+			
 			if (destination == path) {
 				return false;
 			}
@@ -179,11 +202,13 @@ define(function(require, exports, module) {
 			}
 		},
 		render: function(workspaceId, path, doc, options, destination) {
+			Extension.importWorkspace = workspaceId;
+			Extension.importPath = path;
 			SassWorker.compile(doc, function(result) {
 				if (result.status) {
 					Notification.open({
 						type: 'error',
-						title: _('LESS compilation failed.'),
+						title: _('SASS compilation failed.'),
 						description: result.formatted
 					});
 				} else {
