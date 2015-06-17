@@ -213,7 +213,7 @@ define(function(require, exports, module) {
 			
 			//var mainFile = options.main ? this.parsePath(path, options.main, false) : null;
 			
-			if (!destination.match('/\.(scss|sass)$/')) {
+			if (!destination.match(/\.(scss|sass)$/)) {
 				this.render(workspaceId, path, doc, options, destination);
 			} else {
 				this.getCache(workspaceId, destination, function(data) {
