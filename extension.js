@@ -88,7 +88,7 @@ define(function(require, exports, module) {
 				if (result.status) {
 					Notification.open({
 						type: 'error',
-						title: _('SASS compilation failed.'),
+						title: 'SASS compilation failed.',
 						description: result.formatted
 					});
 					
