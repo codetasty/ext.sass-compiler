@@ -95,6 +95,23 @@ define(function(require, exports, module) {
 					return false;
 				}
 				
+				if (options.plugin && Code.extensions[options.plugin]) {
+					Code.extensions[options.plugin].plugin(result.text, function(output, error) {
+						if (error) {
+							Notification.open({
+								type: 'error',
+								title: 'SASS compilation failed (' + options.plugin + ').',
+								description: error.message + ' on line ' + error.line
+							});
+							return false;
+						}
+						
+						FileManager.saveFile(workspaceId, destination, output, null);
+					});
+					
+					return false;
+				}
+				
 				FileManager.saveFile(workspaceId, destination, result.text, null);
 			});
 		}
