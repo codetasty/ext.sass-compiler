@@ -88,8 +88,9 @@ define(function(require, exports, module) {
 				if (result.status) {
 					Notification.open({
 						type: 'error',
-						title: 'SASS compilation failed.',
-						description: result.formatted
+						title: 'SASS compilation failed',
+						description: result.formatted,
+						autoClose: true
 					});
 					
 					return false;
@@ -100,8 +101,9 @@ define(function(require, exports, module) {
 						if (error) {
 							Notification.open({
 								type: 'error',
-								title: 'SASS compilation failed (' + options.plugin + ').',
-								description: error.message + ' on line ' + error.line
+								title: 'SASS compilation failed (' + options.plugin + ')',
+								description: error.message + ' on line ' + error.line,
+								autoClose: true
 							});
 							return false;
 						}
