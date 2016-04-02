@@ -10,7 +10,7 @@ define(function(require, exports, module) {
 	
 	var Sass = new require('./sass');
 	
-	var SassWorker = new Sass('/application/extension/sass-compiler/sass.worker.js');
+	var SassWorker = new Sass(appPath + '/extension/sass-compiler/sass.worker.js');
 	
 	var EditorSession = require('modules/editor/ext/session');
 	
