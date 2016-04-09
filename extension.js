@@ -38,10 +38,11 @@ define(function(require, exports, module) {
 				
 				toLoad = FileManager.parsePath(Extension.importPath, toLoad);
 				
-				FileManager.getCache(Extension.importWorkspace, toLoad, function(data) {
+				FileManager.getCache(Extension.importWorkspace, toLoad, function(data, err) {
 					done({
 						path: toLoad,
-						content: data
+						content: data,
+						error: err ? err.message : null
 					});
 				});
 			});
