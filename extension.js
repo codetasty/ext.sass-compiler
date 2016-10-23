@@ -92,9 +92,20 @@ define(function(require, exports, module) {
 			this.importPath = path;
 			this._underscores = options.underscores || false;
 			
+			var $notification = Notification.open({
+				type: 'default',
+				title: 'LESS compilation',
+				description: 'Compiling <strong>' + path + '</strong>',
+				onClose: function() {
+					
+				}
+			});
+			
 			SassWorker.compile(doc, {
 				style: options.style ? Sass.style[options.style] : Sass.style.nested
 			}, function(result) {
+				$notification.trigger('close');
+				
 				if (result.status) {
 					Notification.open({
 						type: 'error',
