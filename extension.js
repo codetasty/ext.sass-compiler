@@ -12,7 +12,7 @@ define(function(require, exports, module) {
 	
 	var SassWorker = new Sass(paths.extension + '/sass-compiler/sass.worker.js');
 	
-	var EditorSession = require('modules/editor/ext/session');
+	var EditorEditors = require('modules/editor/ext/editors');
 	
 	var Extension = ExtensionManager.register({
 		name: 'sass-compiler',
@@ -47,14 +47,14 @@ define(function(require, exports, module) {
 				});
 			});
 			
-			EditorSession.on('save', this.onSave);
+			EditorEditors.on('save', this.onSave);
 		},
 		destroy: function() {
-			EditorSession.off('save', this.onSave);
+			EditorEditors.off('save', this.onSave);
 		},
-		onSave: function(e) {
-			if (Extension._exts.indexOf(e.storage.extension) !== -1) {
-				Extension.compile(e.storage.workspaceId, e.storage.path, e.session.data.getValue());
+		onSave: function(session, value) {
+			if (Extension._exts.indexOf(session.storage.extension) !== -1) {
+				Extension.compile(session.storage.workspaceId, session.storage.path, value);
 			}
 		},
 		_exts: ['scss', 'sass'],
@@ -98,7 +98,7 @@ define(function(require, exports, module) {
 			
 			var $notification = Notification.open({
 				type: 'default',
-				title: 'LESS compilation',
+				title: 'SASS compilation',
 				description: 'Compiling <strong>' + path + '</strong>',
 				onClose: function() {
 					
@@ -108,9 +108,9 @@ define(function(require, exports, module) {
 			SassWorker.compile(doc, {
 				style: options.style ? Sass.style[options.style] : Sass.style.nested
 			}, function(result) {
-				$notification.trigger('close');
-				
 				if (result.status) {
+					$notification.trigger('close');
+					
 					Notification.open({
 						type: 'error',
 						title: 'SASS compilation failed',
@@ -124,6 +124,8 @@ define(function(require, exports, module) {
 				if (options.plugin && App.extensions[options.plugin]) {
 					App.extensions[options.plugin].plugin(result.text, function(output, error) {
 						if (error) {
+							$notification.trigger('close');
+							
 							Notification.open({
 								type: 'error',
 								title: 'SASS compilation failed (' + options.plugin + ')',
@@ -133,13 +135,31 @@ define(function(require, exports, module) {
 							return false;
 						}
 						
-						FileManager.saveFile(workspaceId, destination, output, null);
+						FileManager.save({
+							id: workspaceId,
+							path: destination,
+							data: function() {
+								$notification.trigger('close');
+							},
+							error: function() {
+								$notification.trigger('close');
+							}
+						}, output);
 					});
 					
 					return false;
 				}
 				
-				FileManager.saveFile(workspaceId, destination, result.text, null);
+				FileManager.save({
+					id: workspaceId,
+					path: destination,
+					data: function() {
+						$notification.trigger('close');
+					},
+					error: function() {
+						$notification.trigger('close');
+					}
+				}, result.text);
 			});
 		}
 	});
