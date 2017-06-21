@@ -26,7 +26,7 @@ define(function(require, exports, module) {
 				watch: this.onWatch.bind(this),
 			});
 			
-			this.sass = new Sass(paths.extension + '/sass-compiler/sass.worker.js');
+			this.sass = new Sass(paths.extension + '/sass-compiler/sass.worker.js?rev=' + this.version);
 			
 			this.sass.importer(function(request, done) {
 				var compiler = EditorCompiler.getCompiler(request.options.id);
