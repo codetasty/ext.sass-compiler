@@ -77,6 +77,7 @@ define(function(require, exports, module) {
 			
 			this.sass.compile(file, {
 				style: style,
+				indentedSyntax: Utils.path.extension(compiler.source[0]) === 'sass',
 				importer: {
 					id: compiler.id,
 					path: path,
