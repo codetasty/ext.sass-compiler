@@ -1,22 +1,33 @@
+/* global define, $, config */
+"use strict";
+
 define(function(require, exports, module) {
-	var ExtensionManager = require('core/extensionManager');
+	const ExtensionManager = require('core/extensionManager');
 	
-	var App = require('core/app');
-	var FileManager = require('core/fileManager');
-	var Utils = require('core/utils');
+	const App = require('core/app');
+	const FileManager = require('core/fileManager');
+	const Utils = require('core/utils');
 	
-	var Sass = new require('./sass');
+	const Sass = require('./sass');
 	
-	var EditorEditors = require('modules/editor/ext/editors');
-	var EditorCompiler = require('modules/editor/ext/compiler');
+	const EditorEditors = require('modules/editor/ext/editors');
+	const EditorCompiler = require('modules/editor/ext/compiler');
 	
-	var Extension = ExtensionManager.register({
-		name: 'sass-compiler',
-	}, {
-		compilerName: 'SASS',
-		watcher: null,
-		sass: null,
-		init: function() {
+	class Extension extends ExtensionManager.Extension {
+		constructor() {
+			super({
+				name: 'sass-compiler',
+			});
+			
+			this.sass = null;
+			this.watcher = null;
+			
+			this.compilerName = 'SASS';
+		}
+		
+		init() {
+			super.init();
+			
 			var self = this;
 			
 			this.watcher = EditorCompiler.addWatcher(this.name, {
@@ -26,13 +37,13 @@ define(function(require, exports, module) {
 				watch: this.onWatch.bind(this),
 			});
 			
-			this.sass = new Sass(paths.extension + '/sass-compiler/sass.worker.js?rev=' + this.version);
+			this.sass = new Sass(config.paths.extension + '/sass-compiler/sass.worker.js?rev=' + this.version);
 			
 			this.sass.importer(function(request, done) {
 				var compiler = EditorCompiler.getCompiler(request.options.id);
 				
 				if (!compiler) {
-					return callback(new Error('Compiler crashed.'));
+					return done({error: new Error('Compiler crashed.')});
 				}
 				
 				var filename = request.previous === 'stdin' ? request.current : request.resolved;
@@ -46,29 +57,40 @@ define(function(require, exports, module) {
 					filename = Utils.path.convert(filename, request.options.path);
 				}
 				
-				FileManager.getCache(compiler.workspaceId, filename, function(data, err) {
+				FileManager.getCache(compiler.workspaceId, filename).then(data => {
 					done({
 						path: filename,
 						content: data,
-						error: err ? err.message : undefined
+						error: undefined
+					});
+				}).catch(e => {
+					done({
+						path: filename,
+						content: null,
+						error: e,
 					});
 				});
 			});
-		},
-		destroy: function() {
+		}
+		
+		destroy() {
+			super.destroy();
+			
 			this.watcher = null;
 			EditorCompiler.removeWatcher(this.name);
 			
 			this.sass.importer(null);
 			this.sass.destroy();
 			this.sass = null;
-		},
-		onWatch: function(workspaceId, obj, session, value) {
+		}
+		
+		onWatch(workspaceId, obj, session, value) {
 			EditorCompiler.addCompiler(this.watcher, this.compilerName, workspaceId, obj, function(compiler) {
 				compiler.file = this.onFile.bind(this);
 			}.bind(this));
-		},
-		onFile: function(compiler, path, file) {
+		}
+		
+		onFile(compiler, path, file) {
 			var style = Sass.style[compiler.options.style];
 			
 			if (typeof style === 'undefined') {
@@ -92,8 +114,8 @@ define(function(require, exports, module) {
 				
 				EditorCompiler.saveOutput(compiler, result.text);
 			});
-		},
-	});
+		}
+	}
 
-	module.exports = Extension;
+	module.exports = new Extension();
 });
