@@ -39,7 +39,7 @@ define(function(require, exports, module) {
 			
 			this.sass = new Sass(config.paths.extension + '/sass-compiler/sass.worker.js?rev=' + this.version);
 			
-			this.sass.importer(function(request, done) {
+			this.sass.importer((request, done) => {
 				var compiler = EditorCompiler.getCompiler(request.options.id);
 				
 				if (!compiler) {
@@ -58,16 +58,17 @@ define(function(require, exports, module) {
 				}
 				
 				FileManager.getCache(compiler.workspaceId, filename).then(data => {
-					done({
-						path: filename,
-						content: data,
-						error: undefined
+					// fix SCSS/SASS handling, see https://github.com/medialize/sass.js/pull/73
+					this.sass.writeFile(filename, data, () => {
+						done({
+							path: filename,
+						});
 					});
 				}).catch(e => {
 					done({
 						path: filename,
 						content: null,
-						error: e,
+						error: e.message,
 					});
 				});
 			});
